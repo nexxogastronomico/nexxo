@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Nexxo · Registro</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --verde: #1D6B52; --verde-med: #2D9E75; --verde-clar: #E1F5EE;
+    --azul: #185FA5; --azul-clar: #E6F1FB;
+    --purp: #3C3489; --purp-clar: #EEEDFE;
+    --naranj: #E07B2A; --naranj-clar: #FEF3E2;
+    --rojo: #C0392B; --rojo-clar: #FDEDEC;
+    --bg: #F7F5F2; --card: #FFFFFF; --text: #1A1A1A;
+    --text-sub: #666666; --border: #E8E4DF;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; max-width: 420px; margin: 0 auto; }
+
+  .header { background: var(--verde); padding: 20px 20px 16px; position: relative; overflow: hidden; }
+  .header::before { content:''; position:absolute; top:-40px; right:-40px; width:140px; height:140px; border-radius:50%; background:rgba(255,255,255,0.06); }
+  .brand { font-family:'DM Serif Display',serif; font-size:24px; color:#fff; letter-spacing:-0.5px; position:relative; z-index:1; }
+  .brand span { color:rgba(255,255,255,0.55); font-style:italic; }
+  .header-sub { font-size:11px; color:rgba(255,255,255,0.6); margin-top:2px; font-weight:300; position:relative; z-index:1; }
+
+  .tabs { display:flex; background:#164F3C; }
+  .tab { flex:1; padding:12px; text-align:center; font-size:13px; font-weight:500; color:rgba(255,255,255,0.5); cursor:pointer; border-bottom:2px solid transparent; transition:all 0.2s; }
+  .tab.active { color:#fff; border-bottom-color:#6EFFC0; }
+
+  .panel { display:none; }
+  .panel.active { display:block; }
+
+  /* RESUMEN */
+  .resumen-grid { display:grid; grid-template-columns:1fr 1fr 1fr; background:#1A5C45; }
+  .res-item { padding:12px 8px; text-align:center; border-right:1px solid rgba(255,255,255,0.1); }
+  .res-item:last-child { border-right:none; }
+  .res-label { font-size:10px; color:rgba(255,255,255,0.5); font-weight:500; text-transform:uppercase; letter-spacing:0.07em; }
+  .res-val { font-size:14px; font-weight:600; color:#fff; margin-top:3px; }
+  .res-val.pos { color:#6EFFC0; } .res-val.neg { color:#FF8A7A; }
+
+  .unidad-cards { padding:14px 14px 0; display:flex; flex-direction:column; gap:8px; }
+  .u-card { background:var(--card); border-radius:12px; padding:12px 14px; border:0.5px solid var(--border); }
+  .u-card-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; }
+  .u-name { font-size:13px; font-weight:600; }
+  .u-neta { font-size:13px; font-weight:600; color:var(--verde); }
+  .u-row { display:grid; grid-template-columns:1fr 1fr 1fr; gap:4px; }
+  .u-item { font-size:11px; color:var(--text-sub); }
+  .u-item span { display:block; font-size:12px; font-weight:500; color:var(--text); }
+
+  .sync-btn { margin:14px 14px 0; width:calc(100% - 28px); padding:11px; border-radius:10px; border:none; background:var(--verde-clar); color:var(--verde); font-family:'DM Sans',sans-serif; font-size:13px; font-weight:600; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; }
+  .sync-btn:active { opacity:0.8; }
+  .sync-time { text-align:center; font-size:11px; color:var(--text-sub); margin-top:6px; padding-bottom:4px; }
+
+  /* ANUAL */
+  .anual-wrap { padding:14px; }
+  .anual-title { font-family:'DM Serif Display',serif; font-size:18px; margin-bottom:12px; }
+  .mes-row { background:var(--card); border-radius:10px; padding:10px 12px; margin-bottom:6px; border:0.5px solid var(--border); display:flex; justify-content:space-between; align-items:center; }
+  .mes-nombre { font-size:13px; font-weight:500; text-transform:capitalize; }
+  .mes-vals { text-align:right; }
+  .mes-gan { font-size:13px; font-weight:600; color:var(--verde); }
+  .mes-sub { font-size:11px; color:var(--text-sub); }
+  .anual-total { background:var(--verde); border-radius:12px; padding:14px; margin-top:10px; display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+  .at-item { text-align:center; }
+  .at-label { font-size:10px; color:rgba(255,255,255,0.6); text-transform:uppercase; letter-spacing:0.07em; }
+  .at-val { font-size:17px; font-weight:600; color:#fff; margin-top:3px; }
+
+  /* FORM */
+  .form-wrap { padding:16px 14px; }
+  .section-title { font-family:'DM Serif Display',serif; font-size:19px; margin-bottom:14px; }
+  .tipo-toggle { display:grid; grid-template-columns:1fr 1fr; background:var(--border); border-radius:12px; padding:3px; margin-bottom:14px; }
+  .tipo-btn { padding:10px; text-align:center; border-radius:10px; font-size:14px; font-weight:500; cursor:pointer; transition:all 0.2s; border:none; background:transparent; color:var(--text-sub); }
+  .tipo-btn.active-ing { background:var(--verde); color:#fff; box-shadow:0 2px 8px rgba(29,107,82,0.3); }
+  .tipo-btn.active-egr { background:var(--rojo); color:#fff; box-shadow:0 2px 8px rgba(192,57,43,0.3); }
+  .unidad-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:14px; }
+  .unidad-btn { padding:11px 10px; border-radius:12px; border:1.5px solid var(--border); background:var(--card); cursor:pointer; transition:all 0.18s; text-align:left; }
+  .unidad-btn:last-child { grid-column:1/-1; }
+  .unidad-dot { width:8px; height:8px; border-radius:50%; margin-bottom:5px; }
+  .unidad-name { font-size:13px; font-weight:500; }
+  .unidad-sub { font-size:11px; color:var(--text-sub); margin-top:1px; }
+  .unidad-btn.selected-gastro { border-color:var(--azul); background:var(--azul-clar); }
+  .unidad-btn.selected-misky  { border-color:var(--purp); background:var(--purp-clar); }
+  .unidad-btn.selected-gbi    { border-color:var(--verde); background:var(--verde-clar); }
+  .input-wrap { background:var(--card); border-radius:14px; border:1.5px solid var(--border); padding:13px 14px; margin-bottom:12px; transition:border-color 0.2s; }
+  .input-wrap:focus-within { border-color:var(--verde); }
+  .input-label { font-size:11px; font-weight:500; color:var(--text-sub); text-transform:uppercase; letter-spacing:0.07em; margin-bottom:5px; }
+  .monto-row { display:flex; align-items:center; gap:8px; }
+  .monto-prefix { font-family:'DM Serif Display',serif; font-size:26px; color:var(--text-sub); }
+  .monto-input { flex:1; border:none; outline:none; font-family:'DM Serif Display',serif; font-size:30px; color:var(--text); background:transparent; width:100%; min-width:0; }
+  .monto-input::placeholder { color:#CCC; }
+  .text-input { width:100%; border:none; outline:none; font-family:'DM Sans',sans-serif; font-size:14px; color:var(--text); background:transparent; resize:none; }
+  .text-input::placeholder { color:#CCC; }
+  .horas-input { width:100%; border:none; outline:none; font-family:'DM Sans',sans-serif; font-size:20px; color:var(--text); background:transparent; }
+  .horas-input::placeholder { color:#CCC; }
+  .fecha-wrap { display:flex; align-items:center; gap:10px; background:var(--card); border-radius:12px; border:1.5px solid var(--border); padding:10px 14px; margin-bottom:18px; }
+  .fecha-input { border:none; outline:none; font-family:'DM Sans',sans-serif; font-size:14px; color:var(--text); background:transparent; flex:1; }
+  .btn-guardar { width:100%; padding:15px; border-radius:14px; border:none; font-family:'DM Sans',sans-serif; font-size:15px; font-weight:600; cursor:pointer; transition:all 0.2s; background:var(--verde); color:#fff; box-shadow:0 4px 16px rgba(29,107,82,0.25); }
+  .btn-guardar:active { transform:scale(0.98); }
+  .btn-guardar.egreso { background:var(--rojo); box-shadow:0 4px 16px rgba(192,57,43,0.25); }
+  .btn-guardar:disabled { background:#CCC; box-shadow:none; cursor:not-allowed; }
+
+  /* HISTORIAL */
+  .hist-wrap { padding:0 14px 28px; }
+  .hist-title { font-family:'DM Serif Display',serif; font-size:17px; margin-bottom:10px; }
+  .hist-empty { font-size:13px; color:var(--text-sub); text-align:center; padding:20px 0; }
+  .hist-item { background:var(--card); border-radius:10px; padding:11px 13px; margin-bottom:7px; display:flex; align-items:center; gap:11px; border:1px solid var(--border); animation:slideIn 0.25s ease; }
+  @keyframes slideIn { from{opacity:0;transform:translateY(-6px)} to{opacity:1;transform:translateY(0)} }
+  .hist-dot { width:9px; height:9px; border-radius:50%; flex-shrink:0; }
+  .hist-body { flex:1; min-width:0; }
+  .hist-desc { font-size:13px; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .hist-meta { font-size:11px; color:var(--text-sub); margin-top:1px; }
+  .hist-monto { font-size:13px; font-weight:600; white-space:nowrap; }
+  .hist-monto.ing { color:var(--verde); } .hist-monto.egr { color:var(--rojo); }
+
+  /* CONFIG */
+  .config-wrap { padding:14px; }
+  .config-card { background:var(--naranj-clar); border:1.5px solid #F0C080; border-radius:12px; padding:14px; margin-bottom:12px; }
+  .config-title { font-size:14px; font-weight:600; color:#633806; margin-bottom:6px; }
+  .config-note { font-size:12px; color:#7A4710; line-height:1.5; margin-bottom:10px; }
+  .config-input { width:100%; padding:9px 12px; border-radius:8px; border:1px solid #F0C080; font-family:'DM Sans',sans-serif; font-size:12px; background:#fff; color:var(--text); outline:none; margin-bottom:8px; }
+  .config-save { padding:8px 18px; border-radius:8px; border:none; background:var(--naranj); color:#fff; font-family:'DM Sans',sans-serif; font-size:13px; font-weight:500; cursor:pointer; }
+  .config-ok { background:var(--verde-clar); border:1.5px solid var(--verde-med); border-radius:12px; padding:12px 14px; font-size:13px; color:var(--verde); font-weight:500; }
+
+  .toast { position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(80px); background:#1A1A1A; color:#fff; padding:11px 20px; border-radius:100px; font-size:13px; font-weight:500; transition:transform 0.3s ease; z-index:100; white-space:nowrap; }
+  .toast.show { transform:translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="brand">Nexxo <span>Gastronómico</span></div>
+  <div class="header-sub">Panel de control · universo de marcas</div>
+</div>
+
+<div class="tabs">
+  <div class="tab active" onclick="setTab('resumen')">Resumen</div>
+  <div class="tab" onclick="setTab('nuevo')">+ Nuevo</div>
+  <div class="tab" onclick="setTab('anual')">Anual</div>
+  <div class="tab" onclick="setTab('config')">⚙️</div>
+</div>
+
+<!-- TAB RESUMEN -->
+<div class="panel active" id="tab-resumen">
+  <div class="resumen-grid">
+    <div class="res-item"><div class="res-label">Ingresos</div><div class="res-val pos" id="tot-ing">$0</div></div>
+    <div class="res-item"><div class="res-label">Egresos</div><div class="res-val neg" id="tot-egr">$0</div></div>
+    <div class="res-item"><div class="res-label">Neto</div><div class="res-val" id="tot-net">$0</div></div>
+  </div>
+  <div class="unidad-cards" id="unidad-cards">
+    <div style="text-align:center;padding:20px;color:var(--text-sub);font-size:13px;">Sincronizando...</div>
+  </div>
+  <button class="sync-btn" onclick="sincronizar()">↻ Actualizar desde Sheets</button>
+  <div class="sync-time" id="sync-time"></div>
+  <div style="height:14px"></div>
+  <div class="hist-wrap">
+    <div class="hist-title">Últimos movimientos</div>
+    <div id="historial-list"><div class="hist-empty">Sin movimientos aún</div></div>
+  </div>
+</div>
+
+<!-- TAB NUEVO -->
+<div class="panel" id="tab-nuevo">
+  <div class="form-wrap">
+    <div class="section-title">Nuevo movimiento</div>
+    <div class="tipo-toggle">
+      <button class="tipo-btn active-ing" id="btn-ing" onclick="setTipo('ingreso')">↑ Ingreso</button>
+      <button class="tipo-btn" id="btn-egr" onclick="setTipo('egreso')">↓ Egreso</button>
+    </div>
+    <div class="unidad-grid">
+      <div class="unidad-btn" id="u-gastro" onclick="setUnidad('gastro')">
+        <div class="unidad-dot" style="background:#185FA5"></div>
+        <div class="unidad-name">Gastrobio</div><div class="unidad-sub">Adaptada</div>
+      </div>
+      <div class="unidad-btn" id="u-misky" onclick="setUnidad('misky')">
+        <div class="unidad-dot" style="background:#3C3489"></div>
+        <div class="unidad-name">Misky Mikuy</div><div class="unidad-sub">Cocina emocional</div>
+      </div>
+      <div class="unidad-btn" id="u-gbi" onclick="setUnidad('gbi')">
+        <div class="unidad-dot" style="background:#1D6B52"></div>
+        <div class="unidad-name">GBI</div><div class="unidad-sub">Bromatología</div>
+      </div>
+    </div>
+    <div class="input-wrap">
+      <div class="input-label">Monto</div>
+      <div class="monto-row">
+        <span class="monto-prefix">$</span>
+        <input class="monto-input" id="monto" type="number" inputmode="numeric" placeholder="0" min="0">
+      </div>
+    </div>
+    <div class="input-wrap">
+      <div class="input-label">Descripción</div>
+      <textarea class="text-input" id="descripcion" rows="2" placeholder="Ej: Entrega viandas semana 2"></textarea>
+    </div>
+    <div class="input-wrap">
+      <div class="input-label">Horas trabajadas (opcional)</div>
+      <input class="horas-input" id="horas" type="number" inputmode="decimal" step="0.5" placeholder="0" min="0">
+    </div>
+    <div class="fecha-wrap">
+      <span>📅</span>
+      <input class="fecha-input" type="date" id="fecha">
+    </div>
+    <button class="btn-guardar" id="btn-guardar" onclick="guardar()">Guardar ingreso</button>
+  </div>
+</div>
+
+<!-- TAB ANUAL -->
+<div class="panel" id="tab-anual">
+  <div class="anual-wrap">
+    <div class="anual-title">Resumen 2026</div>
+    <div id="meses-list"><div class="hist-empty">Sincronizando...</div></div>
+    <div class="anual-total" id="anual-total" style="display:none">
+      <div class="at-item"><div class="at-label">Ingresos totales</div><div class="at-val" id="at-ing">$0</div></div>
+      <div class="at-item"><div class="at-label">Ganancia neta</div><div class="at-val" id="at-neta">$0</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- TAB CONFIG -->
+<div class="panel" id="tab-config">
+  <div class="config-wrap">
+    <div id="config-sin-url" class="config-card">
+      <div class="config-title">⚙️ Conectar con Google Sheets</div>
+      <div class="config-note">Pegá la URL de tu Google Apps Script para sincronizar con Nexxo Gastronómico.</div>
+      <input class="config-input" id="script-url-input" type="url" placeholder="https://script.google.com/macros/s/...">
+      <button class="config-save" onclick="guardarConfig()">Guardar y conectar</button>
+    </div>
+    <div id="config-con-url" class="config-ok" style="display:none">
+      ✅ Conectado con Google Sheets<br>
+      <span style="font-size:11px;color:#555;font-weight:400" id="url-preview"></span><br><br>
+      <span style="font-size:12px;cursor:pointer;color:var(--rojo)" onclick="desconectar()">Cambiar URL</span>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const UNIDADES_MAP = {
+  gastro: { name:'Gastrobio Adaptada', color:'#185FA5', bg:'#E6F1FB' },
+  misky:  { name:'Misky Mikuy',        color:'#3C3489', bg:'#EEEDFE' },
+  gbi:    { name:'GBI',                color:'#1D6B52', bg:'#E1F5EE' },
+};
+
+let tipo = 'ingreso', unidad = null;
+let scriptUrl = localStorage.getItem('nexxo_script_url') || '';
+let movimientos = JSON.parse(localStorage.getItem('nexxo_movimientos') || '[]');
+let datosSheet = null;
+
+// Init
+document.getElementById('fecha').value = new Date().toISOString().split('T')[0];
+if (scriptUrl) {
+  document.getElementById('config-sin-url').style.display = 'none';
+  document.getElementById('config-con-url').style.display = 'block';
+  document.getElementById('url-preview').textContent = scriptUrl.substring(0,60) + '...';
+  sincronizar();
+} else {
+  renderResumenLocal();
+}
+renderHistorial();
+
+function setTab(tab) {
+  document.querySelectorAll('.tab').forEach((t,i) => t.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  const tabs = ['resumen','nuevo','anual','config'];
+  document.querySelectorAll('.tab')[tabs.indexOf(tab)].classList.add('active');
+  document.getElementById('tab-' + tab).classList.add('active');
+}
+
+function setTipo(t) {
+  tipo = t;
+  document.getElementById('btn-ing').className = 'tipo-btn' + (t==='ingreso' ? ' active-ing' : '');
+  document.getElementById('btn-egr').className = 'tipo-btn' + (t==='egreso'  ? ' active-egr' : '');
+  document.getElementById('btn-guardar').textContent = t==='ingreso' ? 'Guardar ingreso' : 'Guardar egreso';
+  document.getElementById('btn-guardar').className   = 'btn-guardar' + (t==='egreso' ? ' egreso' : '');
+}
+
+function setUnidad(u) {
+  unidad = u;
+  ['gastro','misky','gbi'].forEach(id => {
+    document.getElementById('u-'+id).className = 'unidad-btn' + (id===u ? ' selected-'+id : '');
+  });
+}
+
+function fmt(n) { return '$' + Math.abs(Math.round(n)).toLocaleString('es-AR'); }
+
+async function sincronizar() {
+  if (!scriptUrl) { renderResumenLocal(); return; }
+  try {
+    showToast('⏳ Sincronizando...');
+    const res = await fetch(scriptUrl + '?accion=resumen');
+    const data = await res.json();
+    datosSheet = data;
+    renderResumenSheet(data);
+
+    const resA = await fetch(scriptUrl + '?accion=anual');
+    const dataA = await resA.json();
+    renderAnual(dataA);
+
+    const ahora = new Date().toLocaleTimeString('es-AR', {hour:'2-digit',minute:'2-digit'});
+    document.getElementById('sync-time').textContent = 'Última sincronización: ' + ahora;
+    showToast('✅ Actualizado');
+  } catch(e) {
+    showToast('⚠️ Sin conexión — mostrando datos locales');
+    renderResumenLocal();
+  }
+}
+
+function renderResumenSheet(data) {
+  if (!data || !data.unidades) return;
+  const t = data.totales || {};
+  document.getElementById('tot-ing').textContent = fmt(t.ingresos || 0);
+  document.getElementById('tot-egr').textContent = fmt(t.egresos  || 0);
+  const net = (t.gananciaNeta || 0);
+  const elNet = document.getElementById('tot-net');
+  elNet.textContent = fmt(net);
+  elNet.className   = 'res-val ' + (net >= 0 ? 'pos' : 'neg');
+
+  const cont = document.getElementById('unidad-cards');
+  cont.innerHTML = data.unidades.map(u => {
+    const col = UNIDADES_MAP[Object.keys(UNIDADES_MAP).find(k => UNIDADES_MAP[k].name === u.nombre)] || {color:'#888',bg:'#F5F5F5'};
+    return `<div class="u-card">
+      <div class="u-card-header">
+        <div class="u-name" style="color:${col.color}">${u.nombre}</div>
+        <div class="u-neta">${fmt(u.gananciaNeta)}</div>
+      </div>
+      <div class="u-row">
+        <div class="u-item">Ingresos<span>${fmt(u.ingresos)}</span></div>
+        <div class="u-item">Egresos<span style="color:var(--rojo)">${fmt(u.egresos)}</span></div>
+        <div class="u-item">Hs trabajo<span>${u.horas || '—'}</span></div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderResumenLocal() {
+  const ing = movimientos.filter(m=>m.tipo==='ingreso').reduce((s,m)=>s+m.monto,0);
+  const egr = movimientos.filter(m=>m.tipo==='egreso').reduce((s,m)=>s+m.monto,0);
+  const net = Math.round((ing-egr)/2);
+  document.getElementById('tot-ing').textContent = fmt(ing);
+  document.getElementById('tot-egr').textContent = fmt(egr);
+  const elNet = document.getElementById('tot-net');
+  elNet.textContent = fmt(net);
+  elNet.className = 'res-val ' + (net >= 0 ? 'pos' : 'neg');
+  if (!datosSheet) {
+    document.getElementById('unidad-cards').innerHTML = '<div style="text-align:center;padding:16px;color:var(--text-sub);font-size:12px;">Conectá con Sheets para ver el detalle por unidad</div>';
+  }
+}
+
+function renderAnual(data) {
+  const list = document.getElementById('meses-list');
+  if (!data || !data.meses || data.meses.length === 0) {
+    list.innerHTML = '<div class="hist-empty">Sin datos anuales aún</div>';
+    return;
+  }
+  let totalIng = 0, totalNeta = 0;
+  list.innerHTML = data.meses.map(m => {
+    totalIng  += m.ingresos || 0;
+    totalNeta += m.gananciaNeta || 0;
+    return `<div class="mes-row">
+      <div class="mes-nombre">${m.mes}</div>
+      <div class="mes-vals">
+        <div class="mes-gan">${fmt(m.gananciaNeta)}</div>
+        <div class="mes-sub">Ing: ${fmt(m.ingresos)} · Egr: ${fmt(m.egresos)}</div>
+      </div>
+    </div>`;
+  }).join('');
+  document.getElementById('anual-total').style.display = 'grid';
+  document.getElementById('at-ing').textContent  = fmt(totalIng);
+  document.getElementById('at-neta').textContent = fmt(totalNeta);
+}
+
+function renderHistorial() {
+  const list = document.getElementById('historial-list');
+  if (movimientos.length === 0) { list.innerHTML = '<div class="hist-empty">Sin movimientos aún</div>'; return; }
+  const recent = [...movimientos].reverse().slice(0,8);
+  list.innerHTML = recent.map(m => {
+    const u = UNIDADES_MAP[m.unidad] || {color:'#888',bg:'#F5F5F5',name:m.unidad};
+    return `<div class="hist-item">
+      <div class="hist-dot" style="background:${u.color}"></div>
+      <div class="hist-body">
+        <div class="hist-desc">${m.descripcion || m.tipo}</div>
+        <div class="hist-meta">${u.name} · ${m.fecha}</div>
+      </div>
+      <div class="hist-monto ${m.tipo==='ingreso'?'ing':'egr'}">${m.tipo==='ingreso'?'+':'-'}${fmt(m.monto)}</div>
+    </div>`;
+  }).join('');
+}
+
+async function guardar() {
+  const monto = parseFloat(document.getElementById('monto').value);
+  const desc  = document.getElementById('descripcion').value.trim();
+  const fecha = document.getElementById('fecha').value;
+  const horas = parseFloat(document.getElementById('horas').value) || 0;
+  if (!monto || monto <= 0) { showToast('⚠️ Ingresá un monto'); return; }
+  if (!unidad) { showToast('⚠️ Elegí una unidad'); return; }
+
+  const mov = { tipo, unidad, monto, descripcion:desc, fecha, horas, ts:Date.now() };
+  movimientos.push(mov);
+  localStorage.setItem('nexxo_movimientos', JSON.stringify(movimientos));
+
+  document.getElementById('monto').value = '';
+  document.getElementById('descripcion').value = '';
+  document.getElementById('horas').value = '';
+
+  renderHistorial();
+  renderResumenLocal();
+
+  if (scriptUrl) {
+    showToast('⏳ Guardando en Sheets...');
+    try {
+      await fetch(scriptUrl, {
+        method:'POST', mode:'no-cors',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ fecha, tipo, unidad:UNIDADES_MAP[unidad].name, monto, descripcion:desc, horas })
+      });
+      setTimeout(() => sincronizar(), 1500);
+    } catch(e) { showToast('⚠️ Guardado solo local'); }
+  } else {
+    showToast('✅ Guardado');
+  }
+  setTab('resumen');
+}
+
+function guardarConfig() {
+  const url = document.getElementById('script-url-input').value.trim();
+  if (!url) return;
+  localStorage.setItem('nexxo_script_url', url);
+  scriptUrl = url;
+  document.getElementById('config-sin-url').style.display = 'none';
+  document.getElementById('config-con-url').style.display = 'block';
+  document.getElementById('url-preview').textContent = url.substring(0,60) + '...';
+  showToast('✅ Conectado');
+  sincronizar();
+}
+
+function desconectar() {
+  localStorage.removeItem('nexxo_script_url');
+  scriptUrl = '';
+  document.getElementById('config-sin-url').style.display = 'block';
+  document.getElementById('config-con-url').style.display = 'none';
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+</script>
+</body>
+</html>
