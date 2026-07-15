@@ -244,6 +244,10 @@
         </div>
       </div>
       <button class="config-save" onclick="guardarTasasDefault()">Guardar porcentajes</button>
+      <label style="display:flex;align-items:center;gap:7px;margin-top:10px;font-size:11px;color:#7A4710;">
+        <input type="checkbox" id="aplicar-retroactivo" style="width:auto;margin:0;">
+        Aplicar estos % también a lo ya cargado en este celular
+      </label>
     </div>
     <div id="config-sin-url" class="config-card">
       <div class="config-title">⚙️ Conectar con Google Sheets</div>
@@ -272,7 +276,7 @@ const UNIDADES_MAP = {
 // Es el valor PREDETERMINADO que se sugiere al cargar un movimiento, pero
 // se puede editar en cada carga. Cada movimiento guarda su propia tasa,
 // así que cambiar esto acá no afecta lo que ya está cargado.
-const TASA_NETA_INICIAL = { gbi: 0.80, gastro: 0.50, misky: 0.50 };
+const TASA_NETA_INICIAL = { gbi: 0.85, gastro: 0.50, misky: 0.50 };
 let TASA_DEFAULT = JSON.parse(localStorage.getItem('nexxo_tasas_default') || 'null') || { ...TASA_NETA_INICIAL };
 
 function calcularNeta(unidadKey, ingresos, egresos, tasaOverride) {
@@ -298,7 +302,24 @@ function guardarTasasDefault() {
   };
   localStorage.setItem('nexxo_tasas_default', JSON.stringify(TASA_DEFAULT));
   if (unidad) document.getElementById('tasa').value = Math.round(TASA_DEFAULT[unidad] * 100);
-  showToast('✅ Porcentajes actualizados');
+
+  const retroactivo = document.getElementById('aplicar-retroactivo').checked;
+  if (retroactivo) {
+    let cambios = 0;
+    movimientos.forEach(m => {
+      if (TASA_DEFAULT[m.unidad] !== undefined && m.tasa !== TASA_DEFAULT[m.unidad]) {
+        m.tasa = TASA_DEFAULT[m.unidad];
+        cambios++;
+      }
+    });
+    localStorage.setItem('nexxo_movimientos', JSON.stringify(movimientos));
+    document.getElementById('aplicar-retroactivo').checked = false;
+    renderResumenLocal();
+    if (!scriptUrl) { /* ya renderizado arriba */ } else { sincronizar(); }
+    showToast(cambios > 0 ? `✅ Actualizado (${cambios} carga/s)` : '✅ Porcentajes actualizados');
+  } else {
+    showToast('✅ Porcentajes actualizados');
+  }
 }
 
 // Migración: a los movimientos ya guardados que no tengan una tasa propia
