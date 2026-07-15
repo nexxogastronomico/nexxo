@@ -47,6 +47,7 @@
   .u-row { display:grid; grid-template-columns:1fr 1fr 1fr; gap:4px; }
   .u-item { font-size:11px; color:var(--text-sub); }
   .u-item span { display:block; font-size:12px; font-weight:500; color:var(--text); }
+  .u-rate { font-size:10px; color:var(--text-sub); margin-top:4px; }
 
   .sync-btn { margin:14px 14px 0; width:calc(100% - 28px); padding:11px; border-radius:10px; border:none; background:var(--verde-clar); color:var(--verde); font-family:'DM Sans',sans-serif; font-size:13px; font-weight:600; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; }
   .sync-btn:active { opacity:0.8; }
@@ -180,6 +181,13 @@
         <div class="unidad-name">GBI</div><div class="unidad-sub">Bromatología</div>
       </div>
     </div>
+    <div class="input-wrap" id="tasa-wrap">
+      <div class="input-label">% Ganancia neta (editable)</div>
+      <div class="monto-row">
+        <input class="horas-input" id="tasa" type="number" inputmode="decimal" step="1" min="0" max="100" placeholder="50">
+        <span class="monto-prefix" style="font-size:18px;">%</span>
+      </div>
+    </div>
     <div class="input-wrap">
       <div class="input-label">Monto</div>
       <div class="monto-row">
@@ -218,6 +226,25 @@
 <!-- TAB CONFIG -->
 <div class="panel" id="tab-config">
   <div class="config-wrap">
+    <div class="config-card" style="background:var(--verde-clar);border-color:var(--verde-med);">
+      <div class="config-title" style="color:var(--verde);">📊 % de ganancia neta por defecto</div>
+      <div class="config-note" style="color:var(--verde);">Se usa como valor sugerido al cargar un movimiento. Podés cambiarlo en cada carga sin que afecte lo ya guardado.</div>
+      <div class="unidad-grid" style="margin-bottom:6px;">
+        <div>
+          <div class="input-label" style="margin-bottom:3px;">Gastrobio %</div>
+          <input class="config-input" id="tasa-default-gastro" type="number" min="0" max="100" style="margin-bottom:0;">
+        </div>
+        <div>
+          <div class="input-label" style="margin-bottom:3px;">Misky Mikuy %</div>
+          <input class="config-input" id="tasa-default-misky" type="number" min="0" max="100" style="margin-bottom:0;">
+        </div>
+        <div>
+          <div class="input-label" style="margin-bottom:3px;">GBI %</div>
+          <input class="config-input" id="tasa-default-gbi" type="number" min="0" max="100" style="margin-bottom:0;">
+        </div>
+      </div>
+      <button class="config-save" onclick="guardarTasasDefault()">Guardar porcentajes</button>
+    </div>
     <div id="config-sin-url" class="config-card">
       <div class="config-title">⚙️ Conectar con Google Sheets</div>
       <div class="config-note">Pegá la URL de tu Google Apps Script para sincronizar con Nexxo Gastronómico.</div>
@@ -241,6 +268,53 @@ const UNIDADES_MAP = {
   gbi:    { name:'GBI',                color:'#1D6B52', bg:'#E1F5EE' },
 };
 
+// Porcentaje de ganancia neta sobre (ingresos - egresos) para cada unidad.
+// Es el valor PREDETERMINADO que se sugiere al cargar un movimiento, pero
+// se puede editar en cada carga. Cada movimiento guarda su propia tasa,
+// así que cambiar esto acá no afecta lo que ya está cargado.
+const TASA_NETA_INICIAL = { gbi: 0.80, gastro: 0.50, misky: 0.50 };
+let TASA_DEFAULT = JSON.parse(localStorage.getItem('nexxo_tasas_default') || 'null') || { ...TASA_NETA_INICIAL };
+
+function calcularNeta(unidadKey, ingresos, egresos, tasaOverride) {
+  const tasa = tasaOverride !== undefined ? tasaOverride
+             : (TASA_DEFAULT[unidadKey] !== undefined ? TASA_DEFAULT[unidadKey] : 0.5);
+  return (ingresos - egresos) * tasa;
+}
+
+function initTasasConfig() {
+  document.getElementById('tasa-default-gastro').value = Math.round(TASA_DEFAULT.gastro * 100);
+  document.getElementById('tasa-default-misky').value  = Math.round(TASA_DEFAULT.misky  * 100);
+  document.getElementById('tasa-default-gbi').value    = Math.round(TASA_DEFAULT.gbi    * 100);
+}
+
+function guardarTasasDefault() {
+  const g  = parseFloat(document.getElementById('tasa-default-gastro').value);
+  const m  = parseFloat(document.getElementById('tasa-default-misky').value);
+  const gb = parseFloat(document.getElementById('tasa-default-gbi').value);
+  TASA_DEFAULT = {
+    gastro: (isNaN(g)  ? TASA_DEFAULT.gastro : g  / 100),
+    misky:  (isNaN(m)  ? TASA_DEFAULT.misky  : m  / 100),
+    gbi:    (isNaN(gb) ? TASA_DEFAULT.gbi    : gb / 100),
+  };
+  localStorage.setItem('nexxo_tasas_default', JSON.stringify(TASA_DEFAULT));
+  if (unidad) document.getElementById('tasa').value = Math.round(TASA_DEFAULT[unidad] * 100);
+  showToast('✅ Porcentajes actualizados');
+}
+
+// Migración: a los movimientos ya guardados que no tengan una tasa propia
+// (cargados antes de esta función) se les asigna la tasa correspondiente a
+// su unidad — esto es lo que corrige retroactivamente el 80% de GBI.
+function migrarTasasMovimientos() {
+  let huboCambios = false;
+  movimientos.forEach(m => {
+    if (m.tasa === undefined) {
+      m.tasa = TASA_DEFAULT[m.unidad] !== undefined ? TASA_DEFAULT[m.unidad] : 0.5;
+      huboCambios = true;
+    }
+  });
+  if (huboCambios) localStorage.setItem('nexxo_movimientos', JSON.stringify(movimientos));
+}
+
 let tipo = 'ingreso', unidad = null;
 let scriptUrl = localStorage.getItem('nexxo_script_url') || '';
 let movimientos = JSON.parse(localStorage.getItem('nexxo_movimientos') || '[]');
@@ -248,6 +322,8 @@ let datosSheet = null;
 
 // Init
 document.getElementById('fecha').value = new Date().toISOString().split('T')[0];
+migrarTasasMovimientos();
+initTasasConfig();
 if (scriptUrl) {
   document.getElementById('config-sin-url').style.display = 'none';
   document.getElementById('config-con-url').style.display = 'block';
@@ -279,6 +355,7 @@ function setUnidad(u) {
   ['gastro','misky','gbi'].forEach(id => {
     document.getElementById('u-'+id).className = 'unidad-btn' + (id===u ? ' selected-'+id : '');
   });
+  document.getElementById('tasa').value = Math.round(TASA_DEFAULT[u] * 100);
 }
 
 function fmt(n) { return '$' + Math.abs(Math.round(n)).toLocaleString('es-AR'); }
@@ -307,6 +384,7 @@ async function sincronizar() {
 
 function renderResumenSheet(data) {
   if (!data || !data.unidades) return;
+
   const t = data.totales || {};
   document.getElementById('tot-ing').textContent = fmt(t.ingresos || 0);
   document.getElementById('tot-egr').textContent = fmt(t.egresos  || 0);
@@ -317,7 +395,8 @@ function renderResumenSheet(data) {
 
   const cont = document.getElementById('unidad-cards');
   cont.innerHTML = data.unidades.map(u => {
-    const col = UNIDADES_MAP[Object.keys(UNIDADES_MAP).find(k => UNIDADES_MAP[k].name === u.nombre)] || {color:'#888',bg:'#F5F5F5'};
+    const unidadKey = Object.keys(UNIDADES_MAP).find(k => UNIDADES_MAP[k].name === u.nombre);
+    const col = UNIDADES_MAP[unidadKey] || {color:'#888',bg:'#F5F5F5'};
     return `<div class="u-card">
       <div class="u-card-header">
         <div class="u-name" style="color:${col.color}">${u.nombre}</div>
@@ -335,7 +414,17 @@ function renderResumenSheet(data) {
 function renderResumenLocal() {
   const ing = movimientos.filter(m=>m.tipo==='ingreso').reduce((s,m)=>s+m.monto,0);
   const egr = movimientos.filter(m=>m.tipo==='egreso').reduce((s,m)=>s+m.monto,0);
-  const net = Math.round((ing-egr)/2);
+
+  // Ganancia neta = suma de cada movimiento con SU PROPIA tasa (la que tenía
+  // en el momento de cargarse), no la tasa actual. Así, si más adelante
+  // cambiás el % por defecto, lo ya cargado no se recalcula solo.
+  let net = 0;
+  movimientos.forEach(m => {
+    const t = (m.tasa !== undefined) ? m.tasa : (TASA_DEFAULT[m.unidad] !== undefined ? TASA_DEFAULT[m.unidad] : 0.5);
+    net += (m.tipo === 'ingreso' ? m.monto : -m.monto) * t;
+  });
+  net = Math.round(net);
+
   document.getElementById('tot-ing').textContent = fmt(ing);
   document.getElementById('tot-egr').textContent = fmt(egr);
   const elNet = document.getElementById('tot-net');
@@ -352,6 +441,9 @@ function renderAnual(data) {
     list.innerHTML = '<div class="hist-empty">Sin datos anuales aún</div>';
     return;
   }
+  // Nota: el resumen anual viene agregado por mes desde la planilla, sin
+  // desglose por unidad, así que acá no podemos aplicar la tasa diferenciada.
+  // Se muestra tal cual llega del backend (Apps Script).
   let totalIng = 0, totalNeta = 0;
   list.innerHTML = data.meses.map(m => {
     totalIng  += m.ingresos || 0;
@@ -391,16 +483,19 @@ async function guardar() {
   const desc  = document.getElementById('descripcion').value.trim();
   const fecha = document.getElementById('fecha').value;
   const horas = parseFloat(document.getElementById('horas').value) || 0;
+  const tasaInput = parseFloat(document.getElementById('tasa').value);
   if (!monto || monto <= 0) { showToast('⚠️ Ingresá un monto'); return; }
   if (!unidad) { showToast('⚠️ Elegí una unidad'); return; }
+  const tasa = (isNaN(tasaInput) ? TASA_DEFAULT[unidad] : tasaInput / 100);
 
-  const mov = { tipo, unidad, monto, descripcion:desc, fecha, horas, ts:Date.now() };
+  const mov = { tipo, unidad, monto, descripcion:desc, fecha, horas, tasa, ts:Date.now() };
   movimientos.push(mov);
   localStorage.setItem('nexxo_movimientos', JSON.stringify(movimientos));
 
   document.getElementById('monto').value = '';
   document.getElementById('descripcion').value = '';
   document.getElementById('horas').value = '';
+  // La unidad, el tipo y el % quedan como están para agilizar la próxima carga
 
   renderHistorial();
   renderResumenLocal();
@@ -411,14 +506,14 @@ async function guardar() {
       await fetch(scriptUrl, {
         method:'POST', mode:'no-cors',
         headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({ fecha, tipo, unidad:UNIDADES_MAP[unidad].name, monto, descripcion:desc, horas })
+        body: JSON.stringify({ fecha, tipo, unidad:UNIDADES_MAP[unidad].name, monto, descripcion:desc, horas, tasa })
       });
       setTimeout(() => sincronizar(), 1500);
     } catch(e) { showToast('⚠️ Guardado solo local'); }
   } else {
-    showToast('✅ Guardado');
+    showToast('✅ Guardado — seguí cargando');
   }
-  setTab('resumen');
+  document.getElementById('monto').focus();
 }
 
 function guardarConfig() {
